@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Overlay</title>
+</head>
+<style>
+    body{
+        font-size:50px;
+        color:white;
+        font-family: "Kaisei Decol";
+    }
+    h5{
+        font-size: 40px;
+        margin:0px;
+    }
+    h4{
+        margin:0px;
+        margin-top: 0.5rem;
+    }
+    ul{
+        margin:0px;
+    }
+    li{
+        font-size:40px;
+    }
+
+</style>
+<body>
+    <!-- <h5>留言「+1」排隊！</h5>
+    <h5>Type "+1" to queue!</h5> -->
+    <h4>排隊中 / In Queue:</h4>
+    <ul id="queue"></ul>
+</body>
+<script>
+    var port = "<%= port %>";
+
+    function getQueue(){
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.open( "GET", "http://localhost:"+port+"/mah/queue", false ); // false for synchronous request
+        xmlHttp.send( null );
+        responseText = xmlHttp.responseText;
+        console.log(responseText);
+        response = JSON.parse(responseText);
+        return response;
+    }
+    
+    // get queue every 2s
+    setInterval(function(){
+        queue  = getQueue();
+        queueitems=queue.map((p)=>"<li>"+p+"</li>")
+        queuehtml = queueitems.join("");
+        document.getElementById("queue").innerHTML=queuehtml;
+    },2000)
+</script>
+</html>

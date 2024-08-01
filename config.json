@@ -1,0 +1,11 @@
+{
+"httpPort":3001,
+"useTwitch":true,
+"useYoutube":true,
+"botName":"KioBot",
+"admins":["kioma_avalon","k10opalbot"],
+"mahjongStart":false,
+"gmEnabled":true,
+"bottomEnabled":false,
+"magicGirlEnabled":false
+}
