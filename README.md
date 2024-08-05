@@ -32,6 +32,7 @@ Alternatively, enter "node bot.js" in cmd
 - !mah.addfront (names)     Add names to front of queue, separated by space
 - !mah.remove (names)       Remove names from queue, separated by space
 - !mah.removeidx (integers) Remove nth names from queue, starting from 0
+- !mah.clear                Remove all names from queue
 - !mah.3ma                  Play 3-player mahjong game, remove 2 players from queue
 - !mah.4ma                  Play 4-player mahjong game, remove 3 players from queue
 - !mah.5ma                  5ma
