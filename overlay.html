@@ -25,16 +25,48 @@
     li{
         font-size:40px;
     }
+    #message{
+        min-height: 40px;
+        font-size: 40px;
+        
+    }
+
+    .marquee-container {
+        min-height: 40px;
+        margin-bottom: 0.5rem;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .marquee-content {
+      display: inline-block;
+      white-space: nowrap;
+      animation: marquee 10s linear infinite;
+    }
+
+    @keyframes marquee {
+      0% {
+        transform: translateX(100%);
+      }
+      100% {
+        transform: translateX(-100%);
+      }
+    }
 
 </style>
 <body>
     <!-- <h5>留言「+1」排隊！</h5>
     <h5>Type "+1" to queue!</h5> -->
+    <div class="marquee-container">
+        <div id="message" class="marquee-content">Test</div>
+    </div>    
     <h4>排隊中 / In Queue:</h4>
     <ul id="queue"></ul>
 </body>
 <script>
     var port = "<%= port %>";
+    var message = "test"
+    var messageId = 0
 
     function getQueue(){
         var xmlHttp = new XMLHttpRequest();
@@ -48,10 +80,16 @@
     
     // get queue every 2s
     setInterval(function(){
-        queue  = getQueue();
-        queueitems=queue.map((p)=>"<li>"+p+"</li>")
+        response  = getQueue();
+        queueitems=response.queue.map((p)=>"<li>"+p+"</li>")
         queuehtml = queueitems.join("");
         document.getElementById("queue").innerHTML=queuehtml;
+
+        if (response.messageId != messageId){
+            document.getElementById("message").innerText=response.message;
+            messageId = response.messageId;
+        }
+        
     },2000)
 </script>
 </html>

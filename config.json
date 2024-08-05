@@ -4,8 +4,12 @@
 "useYoutube":true,
 "botName":"KioBot",
 "admins":["kioma_avalon","k10opalbot"],
+"twitchChannels":["kioma_avalon"],
+"youtubeAdmins":["UCjMcxJpbVOB0URIS3BGhQ8w"],
+"youtubeChannelId":"UCjMcxJpbVOB0URIS3BGhQ8w",
+"useTwitchForYoutubeMessage":true,
 "mahjongStart":false,
 "gmEnabled":true,
-"bottomEnabled":false,
-"magicGirlEnabled":false
+"bottomEnabled":true,
+"magicGirlEnabled":true
 }
