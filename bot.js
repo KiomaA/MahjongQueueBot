@@ -69,10 +69,16 @@ client.on('message', (channel, tags, message, self) => {
     // console.log(channel,tags,message,self)
   if (self) return;
    // messages
-   if (gmEnabled && message.toLowerCase().includes('早早') | message.toLowerCase().includes('早晨') ) {
+   if (gmEnabled && message.includes('早早') | message.includes('早晨') | message.includes('早安') ) {
     console.log(gmed)
     if (!gmed.includes(tags['display-name'])){
       client.say(channel, `(${botName}) 早早呀 @${tags['display-name']} kiomaaHappy `);
+      gmed.push(tags['display-name'])
+    }
+  } else if (gmEnabled && message.includes('安安') ) {
+    console.log(gmed)
+    if (!gmed.includes(tags['display-name'])){
+      client.say(channel, `(${botName}) @${tags['display-name']} 安安 kiomaaHappy `);
       gmed.push(tags['display-name'])
     }
   } else if (gmEnabled && message.toLowerCase().includes('good morning')) {
@@ -80,7 +86,7 @@ client.on('message', (channel, tags, message, self) => {
       client.say(channel, `(${botName}) Good Morning @${tags['display-name']} kiomaaHappy `);
       gmed.push(tags['display-name'])
     }
-  } else if (gmEnabled && message.toLowerCase().includes('おはよ')) {
+  } else if (gmEnabled && message.includes('おはよ')) {
     if (!gmed.includes(tags['display-name'])){
       client.say(channel, `(${botName}) おはよう @${tags['display-name']} kiomaaHappy `);
       gmed.push(tags['display-name'])
@@ -88,7 +94,7 @@ client.on('message', (channel, tags, message, self) => {
   }
 
 
- if (bottomEnabled && message.toLowerCase().includes('總受') && !admins.includes(tags.username)) {
+ if (bottomEnabled && message.matches(/[總|总|総]受/) && !admins.includes(tags.username)) {
   if (!bottoms.includes(tags['display-name'])){
       client.say(channel, `(${botName}) @${tags['display-name']} 你才總受，你全家都總受 kiomaaAngry`);
       bottoms.push(tags['display-name'])
