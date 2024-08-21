@@ -36,3 +36,5 @@ Alternatively, enter "node bot.js" in cmd
 - !mah.3ma                  Play 3-player mahjong game, remove 2 players from queue
 - !mah.4ma                  Play 4-player mahjong game, remove 3 players from queue
 - !mah.5ma                  5ma
+- !mah.queue                Check queue status
+- !mah.clearmessage         Clear message box

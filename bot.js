@@ -137,10 +137,11 @@ client.on('message', (channel, tags, message, self) => {
   
   // Mahjong
   // queue +1
-  if (mahjongStart && message.toLowerCase().includes('+1')) {
+  if (mahjongStart && message.match(/[+|＋][1|１]/)) {
     if (!mahjongQueue.includes(tags['display-name'])){
         mahjongQueue = [...mahjongQueue, tags['display-name']]
         client.say(channel, `(${botName}) 歡迎 ${tags['display-name']} 加入！目前已排： ${mahjongQueue.join(" ")}`);
+        sendMessage(`歡迎 ${tags['display-name']} 加入！`, false);
     }else{
         client.say(channel,  `(${botName}) ${tags['display-name']} 已排`)
     }
@@ -247,6 +248,12 @@ client.on('message', (channel, tags, message, self) => {
     });
     client.say(channel, `(${botName}) 已移除參加者，目前已排： ${mahjongQueue.join(" ")}`);
   }
+
+  // clear message
+  if (message.toLowerCase().includes('!mah.clearmessage') && admins.includes(tags.username)){
+    message = ""
+    messageId = crypto.randomUUID()
+  }
 });
 }
 
@@ -272,7 +279,7 @@ const fetchYoutube = async (useTwitch, client)=>{
 
 
       // queue +1
-      if (mahjongStart && message.toLowerCase().includes('+1')) {
+      if (mahjongStart && message.match(/[+|＋][1|１]/)) {
         if (!mahjongQueue.includes(username)){
             mahjongQueue = [...mahjongQueue, username]
             sendMessage(`歡迎 ${username} 加入！`,true,client,twitchChannel);
@@ -370,7 +377,13 @@ const fetchYoutube = async (useTwitch, client)=>{
       }
     });
     client.say(twitchChannel, `(${botName}) 已移除參加者，目前已排： ${mahjongQueue.join(" ")}`);
-  }      
+  }
+  
+  // clear message
+  if (message.toLowerCase().includes('!mah.clearmessage') && youtubeAdmins.includes(channelId)){
+    message = ""
+    messageId = crypto.randomUUID()
+  }
 
     }
     
