@@ -25,6 +25,30 @@ let message = ""
 let messageId = ""
 let twitchChannel = twitchChannels[0]
 
+// youtube livechat
+const liveChat = new LiveChat({channelId: youtubeChannelId});
+let fetchTime = new Date()
+
+const connectYoutube = async ()=>{
+  try {
+    const ok = await liveChat.start()
+    console.log("youtube connected")
+  } catch (error) {
+    console.log("fetch youtube error")
+    console.log(error)
+  }
+}
+
+const disconnectYoutube = async ()=>{
+  try {
+    const ok = await liveChat.stop()
+    console.log("youtube disconnected")
+  } catch (error) {
+    console.log("disconnect youtube error")
+    console.log(error)
+  }
+}
+
 
 // http request queue
 app.get('/mah/queue', (req, res) => {
@@ -140,6 +164,18 @@ client.on('message', (channel, tags, message, self) => {
     client.say(channel, `(${botName}) MG disabled`);
   }
 
+  // connect to youtube
+  if (message.toLowerCase()  == '!yt.connect' && admins.includes(tags.username)){
+    client.say(channel, `(${botName}) Connecting to Youtube livechat...`);
+    connectYoutube();
+  }
+
+  // connect to youtube
+  if (message.toLowerCase()  == '!yt.disconnect' && admins.includes(tags.username)){
+    client.say(channel, `(${botName}) Disconnecting Youtube livechat...`);
+    disconnectYoutube();
+  }
+
   
   // Mahjong
   // queue +1
@@ -152,7 +188,6 @@ client.on('message', (channel, tags, message, self) => {
         client.say(channel,  `(${botName}) ${tags['display-name']} 已排`)
     }
   }
-
 
   // mod only 
   // start queue
@@ -260,31 +295,12 @@ client.on('message', (channel, tags, message, self) => {
     message = ""
     messageId = crypto.randomUUID()
   }
-});
+  });
 }
 
-const fetchYoutube = async (useTwitch, client)=>{
-  const liveChat = new LiveChat({channelId: youtubeChannelId});
-
-  let ok;
-  try {
-    ok = await liveChat.start()
-  } catch (error) {
-    console.log("fetch youtube error")
-    console.log(error)
-  }
-
-  const fetchTime = new Date()
-
-  liveChat.on("chat", (chatItem) => {
+liveChat.on("chat", (chatItem) => {
     // process new messages only
-    if (chatItem.timestamp >= fetchTime){
-      // console.log("new message")
-      // console.log(chatItem.message[0].text)
-      // console.log(chatItem.author.name)
-      // console.log(chatItem.author.channelId)
-      // console.log(chatItem.timestamp)
-      
+    if (chatItem.timestamp >= fetchTime){     
       let message = chatItem.message[0].text
       let username = chatItem.author.name
       let channelId = chatItem.author.channelId
@@ -395,15 +411,13 @@ const fetchYoutube = async (useTwitch, client)=>{
   if (message.toLowerCase().includes('!mah.clearmessage') && youtubeAdmins.includes(channelId)){
     message = ""
     messageId = crypto.randomUUID()
+  
   }
-
-    }
-    
-  })
 }
+});
 
-fetchYoutube(useTwitchForYoutubeMessage,client);
-
+// fetchYoutube(useTwitchForYoutubeMessage,client);
+connectYoutube();
 
 
 
