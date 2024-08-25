@@ -7,15 +7,13 @@ const config = require('./config.json')
 const { LiveChat } = require("youtube-chat")
 const crypto = require("crypto");
 const { channel } = require('diagnostics_channel');
+const autoreply = require('./autoreply.json')
 
 
 
 const {useTwitch,useYoutube,youtubeChannelId,useTwitchForYoutubeMessage,botName,admins,youtubeAdmins,httpPort,twitchChannels} = config
 let mahjongStart = false
 let mahjongQueue = []
-let gmed = []
-let bottoms = []
-let magicGirls = []
 
 let gmEnabled = config.gmEnabled;
 let bottomEnabled = config.bottomEnabled;
@@ -28,6 +26,19 @@ let twitchChannel = twitchChannels[0]
 // youtube livechat
 const liveChat = new LiveChat({channelId: youtubeChannelId});
 let fetchTime = new Date()
+
+const replyEnable = []
+const replyList = {}
+const replyCount = {}
+
+// add default enabled replies
+for (const reply of autoreply) {
+  if (reply.defaultOn){
+    if(!replyEnable.includes(reply.type)) replyEnable.push(reply.type);
+  }
+}
+
+console.log("Enabled chat replies: ",replyEnable)
 
 const connectYoutube = async ()=>{
   try {
@@ -89,51 +100,88 @@ const client = new tmi.Client({
 
 if (useTwitch){
 client.connect();
+
+
+
 client.on('message', (channel, tags, message, self) => {
     // console.log(channel,tags,message,self)
   if (self) return;
    // messages
-   if (gmEnabled && message.includes('早早') | message.includes('早晨') | message.includes('早安') ) {
-    console.log(gmed)
-    if (!gmed.includes(tags['display-name'])){
-      client.say(channel, `(${botName}) 早早呀 @${tags['display-name']} kiomaaHappy `);
-      gmed.push(tags['display-name'])
-    }
-  } else if (gmEnabled && message.includes('安安')) {
-    console.log(gmed)
-    if (!gmed.includes(tags['display-name'])){
-      client.say(channel, `(${botName}) @${tags['display-name']} 安安 kiomaaHappy `);
-      gmed.push(tags['display-name'])
-    }
-  }else if (gmEnabled && message.toLowerCase().includes('good morning')) {
-    if (!gmed.includes(tags['display-name'])){
-      client.say(channel, `(${botName}) Good Morning @${tags['display-name']} kiomaaHappy `);
-      gmed.push(tags['display-name'])
-    }
-  } else if (gmEnabled && message.toLowerCase().includes('おはよ')) {
-    if (!gmed.includes(tags['display-name'])){
-      client.say(channel, `(${botName}) おはよう @${tags['display-name']} kiomaaHappy `);
-      gmed.push(tags['display-name'])
+
+  // auto reply
+  for (const reply of autoreply) {
+    // parse message
+    if (message.toLowerCase().includes(reply.message)){
+      // ignore admin if ignore admin flag is on
+      if (reply.ignoreAdmin && admins.includes(tags.username)) break;
+
+      // check if message should be skipped
+      if (!replyEnable.includes(reply.type)) break;
+      if (reply.skip) break;
+
+      if (reply.oneTime){
+        // check if person has already sent same message if one time flag is on
+        if (!replyList[reply.type])  replyList[reply.type] = [];
+        if (replyList[reply.type].includes(tags['display-name'])) break;
+        replyList[reply.type].push(tags['display-name'])
+      }
+
+      // parse message
+      let replyMessage = reply.reply;
+      replyMessage = replyMessage.replace("{name}", tags['display-name']);
+      if (replyMessage.includes("{count}")){
+        if (!replyCount[reply.type]) replyCount[reply.type] = 0;
+        replyCount[reply.type]++;
+        replyMessage = replyMessage.replace("{count}", replyCount[reply.type]);
+      }
+      
+      client.say(channel, `(${botName}) ${replyMessage}`);
+      break;
     }
   }
 
-
- if (bottomEnabled && message.match(/[總|总|総]受/) && !admins.includes(tags.username)) {
-  if (!bottoms.includes(tags['display-name'])){
-      client.say(channel, `(${botName}) @${tags['display-name']} 你才總受，你全家都總受 kiomaaAngry`);
-      bottoms.push(tags['display-name'])
-  }
-  }
-
-  if (magicGirlEnabled && message.toLowerCase().includes('魔法少女') && !admins.includes(tags.username)) {
-    if (!magicGirls.includes(tags['display-name'])){
-      client.say(channel, `(${botName}) @${tags['display-name']} 你才魔法少女，你全家都魔法少女 kiomaaAngry`);
-      magicGirls.push(tags['display-name'])
-    }
-  }
-  
-
+ 
   // mod only
+  if (admins.includes(tags.username)){
+    console.log("admin")
+    if (message.toLowerCase().includes("!chat.enable ")){
+      // enable message type
+      console.log("enable")
+      let types = message.split(" ")
+      types.shift();
+      for (const typ of types) {
+        if (!replyEnable.includes(typ)) replyEnable.push(typ);
+      }
+      client.say(channel, `(${botName}) Enabled ${types.join(" ")}, currently enabled: ${replyEnable.join(" ")}`);
+    }
+
+    if (message.toLowerCase().includes("!chat.disable ")){
+      // enable message type
+      let types = message.split(" ")
+      types.shift();
+      for (const typ of types) {
+        let index = replyEnable.indexOf(typ);
+        if (index !== -1) {
+          replyEnable.splice(index, 1);
+        }
+      }  
+      client.say(channel, `(${botName}) Disabled ${types.join(" ")}, currently enabled: ${replyEnable.join(" ")}`);    
+    }
+
+    if (message.toLowerCase().includes("!chat.reset ")){
+      // reset name list and count
+      let types = message.split(" ")
+      types.shift();
+      for (const typ of types) {
+        replyCount[typ] = 0;
+        replyList[typ] = [];
+      }   
+      client.say(channel, `(${botName}) Reset ${types.join(" ")}`);   
+    }
+
+  }
+
+
   if (message.toLowerCase() == '!chat.gmon' && admins.includes(tags.username)){
     gmEnabled = true
     client.say(channel, `(${botName}) GM enabled`);
