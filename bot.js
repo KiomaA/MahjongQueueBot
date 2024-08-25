@@ -128,11 +128,11 @@ client.on('message', (channel, tags, message, self) => {
 
       // parse message
       let replyMessage = reply.reply;
-      replyMessage = replyMessage.replace("{name}", tags['display-name']);
+      replyMessage = replyMessage.replaceAll("{name}", tags['display-name']);
       if (replyMessage.includes("{count}")){
         if (!replyCount[reply.type]) replyCount[reply.type] = 0;
         replyCount[reply.type]++;
-        replyMessage = replyMessage.replace("{count}", replyCount[reply.type]);
+        replyMessage = replyMessage.replaceAll("{count}", replyCount[reply.type]);
       }
       
       client.say(channel, `(${botName}) ${replyMessage}`);
