@@ -25,7 +25,7 @@ Alternatively, enter "node bot.js" in cmd
 }
 ``
 
-## Commands
+## Mahjong Commands
 - !mah.start                Enable Mahjong queue, queue viewers when +1 is included in chat messages
 - !mah.end                  Disable Mahjong queue
 - !mah.add (names)          Add names to queue, separated by space
@@ -38,3 +38,26 @@ Alternatively, enter "node bot.js" in cmd
 - !mah.5ma                  5ma
 - !mah.queue                Check queue status
 - !mah.clearmessage         Clear message box
+
+
+## Auto reply
+Automatically reply chat messages on Twitch 
+(Youtube chat messages not supported yet)
+
+## Auto reply settings
+```
+ {
+    "defaultOn":(boolean), // whether enable auto reply for this type of message when start
+    "ignoreAdmin":(boolean), // whether ignore auto reply when admin posted message with certain word 
+    "oneTime":(boolean), // whether auto reply should once respond once per person
+    "type":"(sometype)", // type name of message
+    "message":"some words", // message which will trigger auto reply
+    "reply":"早早呀 {name} kiomaaHappy", // reply message, add {name} to replace to viewer, add {count} for message count 
+    "skip":(boolean) // skip message if true, used in cases when "ab" should be skipped but "a" should be responded, make sure to put "ab" on top of "a" to skip
+},
+```
+
+## Auto reply commands
+- !chat.enable (types)      Enable auto reply for types of messages, separated by spaces
+- !chat.disable (types)     Disable auto reply for types of messages, separated by spaces
+- !chat.reset (types)       Reset message count and viewer list for messages (e.g. clear name list and reset count to 0 for given message types)
