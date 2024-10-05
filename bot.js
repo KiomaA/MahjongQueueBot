@@ -1,14 +1,14 @@
-const tmi = require('tmi.js');
-const express = require('express');
+import tmi from 'tmi.js';
+import express from 'express';
+import ejs from 'ejs'
 const app = express();
-app.engine('html', require('ejs').renderFile);
-const credentials = require('./credentials.json');
-const config = require('./config.json')
-const { LiveChat } = require("youtube-chat")
-const crypto = require("crypto");
-const { channel } = require('diagnostics_channel');
-const autoreply = require('./autoreply.json')
-
+app.engine('html', ejs.renderFile);
+import credentials from './credentials.json' assert { type: "json" };
+import config from './config.json' assert { type: "json" };
+import {LiveChat} from 'youtube-chat'
+import crypto from 'crypto'
+import autoreply from './autoreply.json' assert { type: "json" };
+import {playAudioFile} from 'audic'
 
 
 const {useTwitch,useYoutube,youtubeChannelId,useTwitchForYoutubeMessage,botName,admins,youtubeAdmins,httpPort,twitchChannels} = config
@@ -136,6 +136,11 @@ client.on('message', (channel, tags, message, self) => {
       }
       
       client.say(channel, `(${botName}) ${replyMessage}`);
+
+      // play audio
+      if (reply.sound){
+        playAudioFile('./sound/'+reply.sound);
+      }
       break;
     }
   }
