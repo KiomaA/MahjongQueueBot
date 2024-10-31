@@ -9,7 +9,9 @@ import {LiveChat} from 'youtube-chat'
 import crypto from 'crypto'
 import autoreply from './autoreply.json' assert { type: "json" };
 import {playAudioFile} from 'audic'
+import path from 'path';
 
+const __dirname = path.resolve();
 
 const {useTwitch,useYoutube,youtubeChannelId,useTwitchForYoutubeMessage,botName,admins,youtubeAdmins,httpPort,twitchChannels} = config
 let mahjongStart = false
@@ -468,6 +470,11 @@ liveChat.on("chat", (chatItem) => {
   }
 }
 });
+
+liveChat.on('error',(err)=>{
+  console.log(err);
+  disconnectYoutube();
+})
 
 // fetchYoutube(useTwitchForYoutubeMessage,client);
 connectYoutube();
