@@ -156,8 +156,9 @@ client.on('message', (channel, tags, message, self) => {
             let nowSeconds = new Date().getTime() / 1000;
             if (nowSeconds - soundTime[reply.type] < reply.soundCooldown) {
               playsound = false;
-              soundTime[reply.type] = nowSeconds;
               console.log(`play sound in cooldown: ${reply.soundCooldown -(nowSeconds - soundTime[reply.type])} s remaining`)
+            }else{
+              soundTime[reply.type] = nowSeconds;
             }
           }
         }        
@@ -434,8 +435,9 @@ liveChat.on("chat", (chatItem) => {
                 let nowSeconds = new Date().getTime() / 1000;
                 if (nowSeconds - soundTime[reply.type] < reply.soundCooldown) {
                   playsound = false;
-                  soundTime[reply.type] = nowSeconds;
                   console.log(`play sound in cooldown: ${reply.soundCooldown -(nowSeconds - soundTime[reply.type])} s remaining`)
+                }else{
+                  soundTime[reply.type] = nowSeconds;
                 }
               }
             }        
