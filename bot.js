@@ -13,7 +13,7 @@ import path from 'path';
 
 const __dirname = path.resolve();
 
-const {useTwitch,useYoutube,youtubeChannelId,useTwitchForYoutubeMessage,botName,admins,youtubeAdmins,httpPort,twitchChannels} = config
+const {useTwitch,useYoutube,youtubeChannelId,useTwitchForYoutubeMessage,botName,admins,youtubeAdmins,httpPort,twitchChannels, skipTwitchChannels, skipYoutubeChannels} = config
 let mahjongStart = false
 let mahjongQueue = []
 
@@ -25,6 +25,23 @@ let message = ""
 let messageId = ""
 let twitchChannel = twitchChannels[0]
 
+// tmi client
+const client = new tmi.Client({
+  options: { debug: true },
+  connection: {
+    reconnect: true,
+    secure: true,
+  },
+  identity: credentials,
+  channels: twitchChannels, // 想加入的聊天室
+});
+
+const connectTwitch = async() =>{
+    await client.connect();
+}
+
+
+
 // youtube livechat
 const liveChat = new LiveChat({channelId: youtubeChannelId});
 let fetchTime = new Date()
@@ -32,6 +49,7 @@ let fetchTime = new Date()
 const replyEnable = []
 const replyList = {}
 const replyCount = {}
+const soundTime = {}
 
 // add default enabled replies
 for (const reply of autoreply) {
@@ -89,26 +107,14 @@ function sendMessage(mes,useTwitch,twitchClient,twitchChannel){
   }
 }
 
-// tmi client
-const client = new tmi.Client({
-  options: { debug: true },
-  connection: {
-    reconnect: true,
-    secure: true,
-  },
-  identity: credentials,
-  channels: twitchChannels, // 想加入的聊天室
-});
-
-if (useTwitch){
-client.connect();
-
-
-
+//if (useTwitch){
 client.on('message', (channel, tags, message, self) => {
-    // console.log(channel,tags,message,self)
+  console.log(channel,tags,message,self)
   if (self) return;
    // messages
+
+   // skip channels
+   if (skipTwitchChannels.includes(tags.username)) return;
 
   // auto reply
   for (const reply of autoreply) {
@@ -141,7 +147,22 @@ client.on('message', (channel, tags, message, self) => {
 
       // play audio
       if (reply.sound){
-        playAudioFile('./sound/'+reply.sound);
+        // check cooldown time
+        let playsound = true;
+        if (reply.soundCooldown){
+          if (!soundTime[reply.type]){
+            soundTime[reply.type] = new Date().getTime() / 1000;
+          }else{
+            let nowSeconds = new Date().getTime() / 1000;
+            if (nowSeconds - soundTime[reply.type] < reply.soundCooldown) {
+              playsound = false;
+              console.log(`play sound in cooldown: ${reply.soundCooldown -(nowSeconds - soundTime[reply.type])} s remaining`)
+            }
+          }
+        }        
+        if (playsound){
+          playAudioFile('./sound/'+reply.sound);
+        }
       }
       break;
     }
@@ -351,15 +372,80 @@ client.on('message', (channel, tags, message, self) => {
     messageId = crypto.randomUUID()
   }
   });
-}
+//}
 
 liveChat.on("chat", (chatItem) => {
     // process new messages only
-    if (chatItem.timestamp >= fetchTime){     
-      let message = chatItem.message[0].text
+    if (chatItem.timestamp >= fetchTime){   
+      console.log(chatItem.message)
+      if (chatItem.message[0]){
+        if (chatItem.message[0].text){
+          let message = chatItem.message[0].text
+        } else{
+          let message = "";
+        }      
+      }else {
+        let message = "";
+      }
       let username = chatItem.author.name
       let channelId = chatItem.author.channelId
 
+      // skip channels
+      if (skipYoutubeChannels.includes(channelId)) return;
+
+      // auto reply
+      for (const reply of autoreply) {
+        // parse message
+        if (message.toLowerCase().includes(reply.message)){
+          // ignore admin if ignore admin flag is on
+          if (reply.ignoreAdmin && admins.includes(tags.username)) break;
+        
+          // check if message should be skipped
+          if (!replyEnable.includes(reply.type)) break;
+          if (reply.skip) break;
+        
+          if (reply.oneTime){
+            // check if person has already sent same message if one time flag is on
+            if (!replyList[reply.type])  replyList[reply.type] = [];
+            if (replyList[reply.type].includes(username)) break;
+            replyList[reply.type].push(username)
+          }
+        
+          // parse message
+          let replyMessage = reply.reply;
+          replyMessage = replyMessage.replaceAll("{name}", username);
+          if (replyMessage.includes("{count}")){
+            if (!replyCount[reply.type]) replyCount[reply.type] = 0;
+            replyCount[reply.type]++;
+            replyMessage = replyMessage.replaceAll("{count}", replyCount[reply.type]);
+          }
+
+          if (useTwitchForYoutubeMessage) client.say(twitchChannel, `(${botName}) ${replyMessage} (fron YT)`);
+        
+          // play audio
+          if (reply.sound){
+            // check cooldown time
+            let playsound = true;
+            if (reply.soundCooldown){
+              if (!soundTime[reply.type]){
+                soundTime[reply.type] = new Date().getTime() / 1000;
+              }else{
+                let nowSeconds = new Date().getTime() / 1000;
+                if (nowSeconds - soundTime[reply.type] < reply.soundCooldown) {
+                  playsound = false;
+                  console.log(`play sound in cooldown: ${reply.soundCooldown -(nowSeconds - soundTime[reply.type])} s remaining`)
+                }
+              }
+            }        
+            if (playsound){
+              playAudioFile('./sound/'+reply.sound);
+            }
+          }
+
+
+          break;
+        }
+      }
 
       // queue +1
       if (mahjongStart && message.match(/[+|＋][1|１]/)) {
@@ -385,7 +471,7 @@ liveChat.on("chat", (chatItem) => {
     // 3ma
   if (message.toLowerCase() == '!mah.3ma' && youtubeAdmins.includes(channelId)){
     if (mahjongQueue.length < 2){
-      if (useTwitch) client.say(twitchChannel, `(${botName}) 不夠人玩啊，目前有 ${mahjongQueue.join(" ")}`);
+      if (useTwitchForYoutubeMessage) client.say(twitchChannel, `(${botName}) 不夠人玩啊，目前有 ${mahjongQueue.join(" ")}`);
     }else{
         let p1 = mahjongQueue.shift()
         let p2 = mahjongQueue.shift()
@@ -396,25 +482,25 @@ liveChat.on("chat", (chatItem) => {
   // 4ma
   if (message.toLowerCase() == '!mah.4ma' && youtubeAdmins.includes(channelId)){
     if (mahjongQueue.length < 3){
-      if (useTwitch) client.say(twitchChannel, `(${botName}) 不夠人玩啊，目前有 ${mahjongQueue.join(" ")}`);
+      if (useTwitchForYoutubeMessage) client.say(twitchChannel, `(${botName}) 不夠人玩啊，目前有 ${mahjongQueue.join(" ")}`);
     }else{
         let p1 = mahjongQueue.shift()
         let p2 = mahjongQueue.shift()
         let p3 = mahjongQueue.shift()
         // client.say(channel, `(${botName}) ${p1}、${p2}和${p3}，請進入友人場`);
-        sendMessage(`${p1}、${p2}和${p3}，請進入友人場`, true, client, twitchChannel);
+        sendMessage(`${p1}、${p2}和${p3}，請進入友人場`, useTwitchForYoutubeMessage, client, twitchChannel);
     }
   }
 
   // 5ma
   if (message.toLowerCase() == '!mah.5ma' && youtubeAdmins.includes(channelId)){
-    client.say(twitchChannel, `(${botName}) 對唔住喎日麻冇五麻呢樣嘢，最多我咪俾個5ma你囉 <3 `);
+    if (useTwitchForYoutubeMessage) client.say(twitchChannel, `(${botName}) 對唔住喎日麻冇五麻呢樣嘢，最多我咪俾個5ma你囉 <3 `);
   }
 
   // clear queue
   if (message.toLowerCase() == '!mah.clear' && youtubeAdmins.includes(channelId)){
     mahjongQueue = [];
-    client.say(twitchChannel, `(${botName}) 已清除排隊`);
+    if (useTwitchForYoutubeMessage) client.say(twitchChannel, `(${botName}) 已清除排隊`);
   }
 
   // add players to queue
@@ -423,7 +509,7 @@ liveChat.on("chat", (chatItem) => {
     addNames.shift()
     mahjongQueue = [...mahjongQueue, ...addNames]
     sendMessage(`歡迎 ${addNames.join("、")}加入！`, false);
-    client.say(twitchChannel, `(${botName}) 歡迎 ${addNames.join("、")}加入！ 目前已排： ${mahjongQueue.join(" ")}`);
+    if (useTwitchForYoutubeMessage) client.say(twitchChannel, `(${botName}) 歡迎 ${addNames.join("、")}加入！ 目前已排： ${mahjongQueue.join(" ")}`);
   }
 
   // add players to front of queue
@@ -432,7 +518,7 @@ liveChat.on("chat", (chatItem) => {
     addNames.shift()
     mahjongQueue = [...addNames, ...mahjongQueue]
     sendMessage(`歡迎 ${addNames.join("、")}加入！`, false);
-    client.say(twitchChannel, `(${botName}) 歡迎 ${addNames.join("、")}加入！ 目前已排： ${mahjongQueue.join(" ")}`);
+    if (useTwitchForYoutubeMessage) client.say(twitchChannel, `(${botName}) 歡迎 ${addNames.join("、")}加入！ 目前已排： ${mahjongQueue.join(" ")}`);
   }
 
    // remove player by name
@@ -446,7 +532,7 @@ liveChat.on("chat", (chatItem) => {
           mahjongQueue.splice(index, 1);
       }
     });
-    client.say(twitchChannel, `(${botName}) 已移除參加者，目前已排： ${mahjongQueue.join(" ")}`);
+    if (useTwitchForYoutubeMessage) client.say(twitchChannel, `(${botName}) 已移除參加者，目前已排： ${mahjongQueue.join(" ")}`);
   }
 
   // remove nth player
@@ -459,25 +545,31 @@ liveChat.on("chat", (chatItem) => {
           mahjongQueue.splice(index, 1);
       }
     });
-    client.say(twitchChannel, `(${botName}) 已移除參加者，目前已排： ${mahjongQueue.join(" ")}`);
+    if (useTwitchForYoutubeMessage) client.say(twitchChannel, `(${botName}) 已移除參加者，目前已排： ${mahjongQueue.join(" ")}`);
   }
   
   // clear message
   if (message.toLowerCase().includes('!mah.clearmessage') && youtubeAdmins.includes(channelId)){
     message = ""
     messageId = crypto.randomUUID()
-  
   }
 }
 });
 
-liveChat.on('error',(err)=>{
+liveChat.on('error',async(err)=>{
+  console.log("[ERROR] YT Livestream error")
   console.log(err);
-  disconnectYoutube();
+  if (useTwitchForYoutubeMessage)  client.say(twitchChannel, `(${botName}) YT Livestream error`);
 })
 
-// fetchYoutube(useTwitchForYoutubeMessage,client);
-connectYoutube();
+
+const connectAll = async ()=>{
+  if (useTwitch) await connectTwitch();
+  if (useYoutube) await connectYoutube();
+}
+
+connectAll();
+
 
 
 

@@ -37,12 +37,12 @@ Alternatively, enter "node bot.js" in cmd
 - !mah.4ma                  Play 4-player mahjong game, remove 3 players from queue
 - !mah.5ma                  5ma
 - !mah.queue                Check queue status
-- !mah.clearmessage         Clear message box
+- !mah.clearmessage         Clear HTML message box
 
 
 ## Auto reply
 Automatically reply chat messages on Twitch 
-(Youtube chat messages not supported yet)
+Youtube chat messages could only be replied on Twitch, you may redirect messages to Youtube if you are using Restream.io
 
 ## Auto reply settings
 ```
@@ -53,7 +53,9 @@ Automatically reply chat messages on Twitch
     "type":"(sometype)", // type name of message
     "message":"some words", // message which will trigger auto reply
     "reply":"早早呀 {name} kiomaaHappy", // reply message, add {name} to replace to viewer, add {count} for message count 
-    "skip":(boolean) // skip message if true, used in cases when "ab" should be skipped but "a" should be responded, make sure to put "ab" on top of "a" to skip
+    "skip":(boolean), // skip message if true, used in cases when "ab" should be skipped but "a" should be responded, make sure to put "ab" on top of "a" to skip
+    "sound": "path of sound", // path of sound to play when triggered, put all sound in /sound folder
+    "soundCooldown": (number) // number of seconds of cooldown time of triggering sound, no cooldown time if zero or not available
 },
 ```
 

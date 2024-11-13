@@ -6,6 +6,8 @@
 "admins":["kioma_avalon","k10opalbot"],
 "twitchChannels":["kioma_avalon"],
 "youtubeAdmins":["UCjMcxJpbVOB0URIS3BGhQ8w"],
+"skipTwitchChannels":["restreambot"],
+"skipYoutubeChannels":["UC8Of3RTqrxiDGk6BINBLihw"],
 "youtubeChannelId":"UCjMcxJpbVOB0URIS3BGhQ8w",
 "useTwitchForYoutubeMessage":true,
 "mahjongStart":false,
